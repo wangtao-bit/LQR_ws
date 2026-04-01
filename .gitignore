@@ -1,0 +1,50 @@
+# ROS 2
+build/
+install/
+log/
+.ros/
+perc_msgs/
+pkg_version/
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# 编译产物
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+
+# 临时文件
+*.tmp
+*.log
+.DS_Store
+*.bak
+*.orig
+
+# Python (如果有)
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+.pytest_cache/
+
+# 地图文件（如果很大，可以忽略，或使用Git LFS）
+# *.pgm
+# *.yaml
+
+# 测试覆盖率
+*.gcov
+*.gcda
+*.gcno
+
+# 文档生成
+html/
+latex/
+
