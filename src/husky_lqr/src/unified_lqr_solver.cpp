@@ -31,7 +31,6 @@ bool UnifiedLQRSolver::solve(
 {
   Eigen::Matrix3d P = Q;
   bool converged = false;
-
   for (int i = 0; i < max_iterations; ++i) {
     Eigen::Matrix2d S = R + B.transpose() * P * B;
     Eigen::LDLT<Eigen::Matrix2d> ldlt(S);
@@ -47,10 +46,10 @@ bool UnifiedLQRSolver::solve(
     const Eigen::Matrix2d S_inv = ldlt.solve(Eigen::Matrix2d::Identity());
     const Eigen::Matrix3d P_next =
       A.transpose() * P * A - A.transpose() * P * B * S_inv * B.transpose() * P * A + Q;
+
     if (!P_next.allFinite()) {
       return false;
     }
-
     if ((P_next - P).norm() < tolerance) {
       P = P_next;
       converged = true;

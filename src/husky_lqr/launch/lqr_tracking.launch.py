@@ -17,16 +17,21 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    rviz_path_builder = Node(
+    bow_path = Node(
         package='husky_lqr',
-        executable='rviz_path_builder_node',
-        name='rviz_path_builder_node',
+        executable='bow_coverage_path_publisher',
+        name='bow_coverage_path_publisher',
         output='screen',
         parameters=[{
             'frame_id': 'map',
-            'min_point_distance': 0.10,
-            'interpolation_per_segment': 10,
-            'resample_step': 0.10,
+            'lane_spacing': 0.8,
+            'length': 12.0,
+            'width': 4.0,
+            'turn_radius': 1.0,
+            'resolution': 0.05,
+            'publish_rate': 1.0,
+            'origin_x': 0.0,
+            'origin_y': 0.0,
         }],
     )
 
@@ -41,12 +46,12 @@ def generate_launch_description():
             'goal_tolerance': 0.25,
             'min_lqr_speed': 0.10,
             'kappa_speed_eps': 1e-3,
-            'base_v_ref': 0.6,
+            'base_v_ref': 0.2,
             'v_min': 0.0,
             'v_max': 1.0,
             'w_max': 1.5,
             'accel_limit': 0.6,
-            'decel_limit': 0.8,
+            'decel_limit': 1.2,
             'w_accel_limit': 1.8,
             'q_ex': 2.0,
             'q_ey': 4.0,
@@ -65,7 +70,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        rviz_path_builder,
+        bow_path,
         lqr_tracker,
         rviz2,
     ])

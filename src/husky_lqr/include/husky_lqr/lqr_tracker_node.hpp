@@ -23,6 +23,7 @@
 #include <nav_msgs/msg/odometry.hpp>
 #include <nav_msgs/msg/path.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <visualization_msgs/msg/marker.hpp>
 
 #include "husky_lqr/unified_lqr_solver.hpp"
 
@@ -65,6 +66,7 @@ private:
   rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path_sub_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_pub_;
+  rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr lookahead_marker_pub_;
   rclcpp::TimerBase::SharedPtr control_timer_;
 
   nav_msgs::msg::Odometry::SharedPtr latest_odom_;

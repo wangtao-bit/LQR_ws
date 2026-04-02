@@ -36,7 +36,7 @@ LQRTrackerNode::LQRTrackerNode()
 
   base_v_ref_ = this->declare_parameter<double>("base_v_ref", 0.6);
   v_min_ = this->declare_parameter<double>("v_min", 0.0);
-  v_max_ = this->declare_parameter<double>("v_max", 1.0);
+  v_max_ = this->declare_parameter<double>("v_max", 0.5);
   w_max_ = this->declare_parameter<double>("w_max", 1.5);
   accel_limit_ = this->declare_parameter<double>("accel_limit", 0.6);
   decel_limit_ = this->declare_parameter<double>("decel_limit", 0.8);
@@ -44,7 +44,7 @@ LQRTrackerNode::LQRTrackerNode()
 
   q_ex_ = this->declare_parameter<double>("q_ex", 2.0);
   q_ey_ = this->declare_parameter<double>("q_ey", 8.0);
-  q_etheta_ = this->declare_parameter<double>("q_etheta", 3.0);
+  q_etheta_ = this->declare_parameter<double>("q_etheta", 10.0);
   r_v_ = this->declare_parameter<double>("r_v", 1.0);
   r_w_ = this->declare_parameter<double>("r_w", 0.8);
 
@@ -60,6 +60,8 @@ LQRTrackerNode::LQRTrackerNode()
 
   cmd_pub_ = this->create_publisher<geometry_msgs::msg::Twist>(
     "/cmd_vel", rclcpp::QoS(20));
+  lookahead_marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>(
+    "/lookahead_point_marker", rclcpp::QoS(10));
 
   control_timer_ = this->create_wall_timer(
     std::chrono::duration<double>(dt_),
@@ -89,7 +91,7 @@ bool LQRTrackerNode::hasValidState() const
 {
   return latest_odom_ != nullptr && !ref_path_.empty();
 }
-
+// 计算曲率
 std::vector<LQRTrackerNode::RefPoint> LQRTrackerNode::toRefPath(
   const nav_msgs::msg::Path & path) const
 {
@@ -136,6 +138,7 @@ std::vector<LQRTrackerNode::RefPoint> LQRTrackerNode::toRefPath(
   return out;
 }
 
+// 参考点选择，先找最近点，再往前找一个前视距离
 size_t LQRTrackerNode::findNearestIndex(double x, double y) const
 {
   double best_d2 = std::numeric_limits<double>::max();
@@ -165,6 +168,7 @@ size_t LQRTrackerNode::findNearestIndex(double x, double y) const
   return best_idx;
 }
 
+// 传入参考点进行误差计算
 LQRTrackerNode::Errors LQRTrackerNode::computeErrors(
   double x, double y, double yaw, const RefPoint & ref) const
 {
@@ -247,6 +251,27 @@ void LQRTrackerNode::onControlTimer()
   const auto & ref = ref_path_[idx];
   const Errors e = computeErrors(x, y, yaw, ref);
 
+  visualization_msgs::msg::Marker lookahead_marker;
+  lookahead_marker.header.stamp = this->now();
+  lookahead_marker.header.frame_id = latest_odom_->header.frame_id.empty() ?
+    "map" : latest_odom_->header.frame_id;
+  lookahead_marker.ns = "lqr_lookahead";
+  lookahead_marker.id = 0;
+  lookahead_marker.type = visualization_msgs::msg::Marker::SPHERE;
+  lookahead_marker.action = visualization_msgs::msg::Marker::ADD;
+  lookahead_marker.pose.position.x = ref.x;
+  lookahead_marker.pose.position.y = ref.y;
+  lookahead_marker.pose.position.z = 0.15;
+  lookahead_marker.pose.orientation.w = 1.0;
+  lookahead_marker.scale.x = 0.25;
+  lookahead_marker.scale.y = 0.25;
+  lookahead_marker.scale.z = 0.25;
+  lookahead_marker.color.a = 1.0;
+  lookahead_marker.color.r = 1.0;
+  lookahead_marker.color.g = 0.2;
+  lookahead_marker.color.b = 0.2;
+  lookahead_marker_pub_->publish(lookahead_marker);
+
   const auto & goal = ref_path_.back();
   const double dist_to_goal = std::hypot(x - goal.x, y - goal.y);
   const double goal_scale = clamp(dist_to_goal / std::max(goal_tolerance_, 1e-3), 0.0, 1.0);
@@ -282,6 +307,10 @@ void LQRTrackerNode::onControlTimer()
   double v_cmd = v_ref + delta_v;
   double w_cmd = omega_ref + delta_w;
 
+  // Secondary curvature-based limit on final command speed.
+  const double curve_limited_v_cmd = std::max(
+    0.0, (w_max_ - std::abs(delta_w)) / (std::abs(ref.kappa) + kappa_speed_eps_));
+  v_cmd = std::min(v_cmd, curve_limited_v_cmd);
   v_cmd = clamp(v_cmd, v_min_, v_max_);
   w_cmd = clamp(w_cmd, -w_max_, w_max_);
 

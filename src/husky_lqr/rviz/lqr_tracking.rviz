@@ -49,19 +49,6 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /plan
       Value: true
-    - Class: rviz_default_plugins/Marker
-      Enabled: true
-      Name: ClickedPoints
-      Namespaces:
-        clicked_points: true
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        Filter size: 10
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /clicked_points_marker
-      Value: true
     - Class: rviz_default_plugins/TF
       Enabled: true
       Frame Timeout: 15
@@ -123,6 +110,19 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /global_costmap_updates
       Use Timestamp: false
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Name: LookaheadPoint
+      Namespaces:
+        lqr_lookahead: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /lookahead_point_marker
       Value: true
   Enabled: true
   Global Options:

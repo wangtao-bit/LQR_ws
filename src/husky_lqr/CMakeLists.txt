@@ -25,23 +25,32 @@ ament_target_dependencies(lqr_tracker_node
   geometry_msgs
   nav_msgs
   tf2
+  visualization_msgs
 )
 target_link_libraries(lqr_tracker_node Eigen3::Eigen)
 
-add_executable(rviz_path_builder_node
-  src/rviz_path_builder_node.cpp
+add_executable(bow_coverage_path_publisher
+  src/bow_coverage_path_publisher.cpp
 )
-ament_target_dependencies(rviz_path_builder_node
+ament_target_dependencies(bow_coverage_path_publisher
   rclcpp
   geometry_msgs
   nav_msgs
-  std_msgs
   visualization_msgs
+)
+
+add_executable(tracking_metrics_node
+  src/tracking_metrics_node.cpp
+)
+ament_target_dependencies(tracking_metrics_node
+  rclcpp
+  nav_msgs
 )
 
 install(TARGETS
   lqr_tracker_node
-  rviz_path_builder_node
+  bow_coverage_path_publisher
+  tracking_metrics_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
